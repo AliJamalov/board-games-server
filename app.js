@@ -8,6 +8,8 @@ import authRouter from "./routes/auth.routes.js";
 import gameRouter from "./routes/game.routes.js";
 import userRouter from "./routes/user.routes.js";
 import categoryRouter from "./routes/category.routes.js";
+import contactRouter from "./routes/contact.routes.js";
+import faqRouter from "./routes/faq.routes.js";
 
 const server = express();
 
@@ -27,6 +29,8 @@ server.use("/api/auth", authRouter);
 server.use("/api/games", gameRouter);
 server.use("/api/users", userRouter);
 server.use("/api/categories", categoryRouter);
+server.use("/api/contacts", contactRouter);
+server.use("/api/faq", faqRouter);
 
 const PORT = process.env.PORT;
 const MONGODB_URL = process.env.MONGODB_URL;
