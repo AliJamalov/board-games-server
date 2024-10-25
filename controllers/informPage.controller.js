@@ -17,24 +17,14 @@ export const getAllInforms = async (req, res) => {
 
 export const getInformById = async (req, res) => {
   try {
-    const singleInform = await InformPage.findById(req.params.id);
-
-    if (!singleInform) {
-      return res.status(404).json({
-        success: false,
-        message: "Inform not found",
-      });
+    const { code } = req.params;
+    const informPage = await InformPage.findOne({ code });
+    if (!informPage) {
+      return res.status(404).json({ message: "Page not found" });
     }
-
-    res.status(200).json({
-      success: true,
-      data: singleInform,
-    });
+    res.json(informPage);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message || "Internal Server Error",
-    });
+    res.status(500).json({ message: error.message });
   }
 };
 

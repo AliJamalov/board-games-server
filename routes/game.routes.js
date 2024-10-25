@@ -14,6 +14,10 @@ const router = express.Router();
 
 router.get("/", getAllGames);
 
+router.get("/new-arrivals", getNewArrivals);
+
+router.get("/recomended", getRecomended);
+
 router.get("/:id", getGameById);
 
 router.post("/", createGame);
@@ -21,9 +25,5 @@ router.post("/", createGame);
 router.patch("/:id", updateGame);
 
 router.delete("/:id", deleteGame);
-
-router.get("/new-arrivals", getNewArrivals);
-
-router.get("/recomended", getRecomended);
 
 export default router;

@@ -18,6 +18,14 @@ const GameSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    duration: {
+      type: String,
+      required: true,
+    },
+    players: {
+      type: String,
+      required: true,
+    },
     images: {
       type: [String],
       required: true,
