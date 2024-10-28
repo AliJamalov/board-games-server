@@ -2,7 +2,14 @@ import { Game } from "../models/game.model.js";
 
 export const getAllGames = async (req, res) => {
   try {
-    const games = await Game.find({});
+    const { age, players, duration } = req.query;
+
+    const filter = {};
+    if (age) filter.age = age;
+    if (players) filter.players = players;
+    if (duration) filter.duration = duration;
+
+    const games = await Game.find(filter);
 
     res.status(200).json({
       success: true,

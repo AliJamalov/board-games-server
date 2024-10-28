@@ -11,12 +11,13 @@ import categoryRouter from "./routes/category.routes.js";
 import contactRouter from "./routes/contact.routes.js";
 import faqRouter from "./routes/faq.routes.js";
 import informRouter from "./routes/informPage.routes.js";
+import searchRouter from "./routes/search.routes.js";
 
 const server = express();
 
 server.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: ["http://localhost:5173", "http://localhost:5174"],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
@@ -33,6 +34,7 @@ server.use("/api/categories", categoryRouter);
 server.use("/api/contacts", contactRouter);
 server.use("/api/faq", faqRouter);
 server.use("/api/informs", informRouter);
+server.use("/api/search", searchRouter);
 
 const PORT = process.env.PORT;
 const MONGODB_URL = process.env.MONGODB_URL;
