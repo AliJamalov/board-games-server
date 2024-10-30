@@ -2,17 +2,31 @@ import { Game } from "../models/game.model.js";
 
 export const getAllGames = async (req, res) => {
   try {
-    const { age, players, duration } = req.query;
+    const { age, category, players, duration, page = 1, limit } = req.query;
 
     const filter = {};
     if (age) filter.age = age;
     if (players) filter.players = players;
     if (duration) filter.duration = duration;
+    if (category) filter.category = category;
 
-    const games = await Game.find(filter);
+    const skip = (page - 1) * limit;
+
+    const [count, games] = await Promise.all([
+      Game.countDocuments(filter),
+      Game.find(filter).limit(limit).skip(skip),
+    ]);
+
+    const pageCount = Math.ceil(count / limit);
 
     res.status(200).json({
       success: true,
+      pagination: {
+        totalItems: count,
+        pageCount,
+        currentPage: page,
+        itemsPerPage: limit,
+      },
       data: games,
     });
   } catch (error) {
