@@ -5,7 +5,7 @@ import {
   getFaqById,
   updateFaq,
   deleteFaq,
-} from "../controllers/faq.controller.js";
+} from "../../controllers/admin/faq.controller.js";
 
 const router = express.Router();
 

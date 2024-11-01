@@ -5,7 +5,7 @@ import {
   deleteInform,
   updateInform,
   createInform,
-} from "../controllers/informPage.controller.js";
+} from "../../controllers/admin/informPage.controller.js";
 
 const router = express.Router();
 

@@ -1,4 +1,4 @@
-import InformPage from "../models/informPage.model.js";
+import InformPage from "../../models/informPage.model.js";
 
 export const getAllInforms = async (req, res) => {
   try {

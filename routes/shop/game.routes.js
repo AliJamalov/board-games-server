@@ -8,7 +8,7 @@ import {
   deleteGame,
   getNewArrivals,
   getRecomended,
-} from "../controllers/game.controller.js";
+} from "../../controllers/shop/game.controller.js";
 
 const router = express.Router();
 

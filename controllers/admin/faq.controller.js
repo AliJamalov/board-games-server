@@ -1,4 +1,4 @@
-import Faq from "../models/faq.model.js";
+import Faq from "../../models/faq.model.js";
 
 export const createFaq = async (req, res) => {
   const { title, description } = req.body;

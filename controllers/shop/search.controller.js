@@ -1,4 +1,4 @@
-import { Game } from "../models/game.model.js";
+import { Game } from "../../models/game.model.js";
 
 export const searchProducts = async (req, res) => {
   const { keyword } = req.params;

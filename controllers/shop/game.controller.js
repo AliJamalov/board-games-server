@@ -1,20 +1,63 @@
-import { Game } from "../models/game.model.js";
+import { Game } from "../../models/game.model.js";
 
 export const getAllGames = async (req, res) => {
   try {
-    const { age, category, players, duration, page = 1, limit } = req.query;
+    const {
+      age,
+      category,
+      players,
+      duration,
+      page = 1,
+      limit,
+      sortBy = "price-lowtohigh",
+    } = req.query;
 
+    // Filter
     const filter = {};
     if (age) filter.age = age;
     if (players) filter.players = players;
     if (duration) filter.duration = duration;
     if (category) filter.category = category;
 
+    // Sort
+    let sort = {};
+
+    switch (sortBy) {
+      case "price-lowtohigh":
+        sort.price = 1;
+
+        break;
+      case "price-hightolow":
+        sort.price = -1;
+
+        break;
+      case "name-atoz":
+        sort.name = 1;
+        break;
+
+      case "name-ztoa":
+        sort.name = -1;
+        break;
+
+      case "date-newest":
+        sort.createdAt = -1;
+        break;
+
+      case "date-oldest":
+        sort.createdAt = 1;
+        break;
+
+      default:
+        sort.price = 1;
+        break;
+    }
+
+    // Pagination
     const skip = (page - 1) * limit;
 
     const [count, games] = await Promise.all([
       Game.countDocuments(filter),
-      Game.find(filter).limit(limit).skip(skip),
+      Game.find(filter).limit(limit).skip(skip).sort(sort),
     ]);
 
     const pageCount = Math.ceil(count / limit);

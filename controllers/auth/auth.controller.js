@@ -1,4 +1,4 @@
-import { User } from "../models/user.model.js";
+import { User } from "../../models/user.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
@@ -15,11 +15,11 @@ export const register = async (req, res) => {
   }
 
   try {
-    const checkUser = await User.findOne({ email });
+    const checkUser = await User.findOne({ userName });
     if (checkUser) {
       return res.status(400).json({
         success: false,
-        message: "User with this email already exists! Please try again.",
+        message: "User with this username already exists! Please try again.",
       });
     }
 
@@ -41,6 +41,10 @@ export const register = async (req, res) => {
       { expiresIn: "30d" }
     );
 
+    res.cookie("token", token, {
+      expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    });
+
     res.status(201).json({
       success: true,
       user: {
@@ -48,7 +52,6 @@ export const register = async (req, res) => {
         userName: newUser.userName,
         email: newUser.email,
       },
-      token,
       message: "Registration successful",
     });
   } catch (error) {
@@ -62,9 +65,9 @@ export const register = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  const { email, password } = req.body;
+  const { userName, password } = req.body;
 
-  if (!email || !password) {
+  if (!userName || !password) {
     return res.status(400).json({
       success: false,
       message: "Please fill all required fields!",
@@ -72,11 +75,11 @@ export const login = async (req, res) => {
   }
 
   try {
-    const checkUser = await User.findOne({ email });
+    const checkUser = await User.findOne({ userName });
     if (!checkUser) {
       return res.status(401).json({
         success: false,
-        message: "Wrong email or password.",
+        message: "Wrong username or password.",
       });
     }
 
@@ -95,9 +98,7 @@ export const login = async (req, res) => {
       expiresIn: "30d",
     });
 
-    res.cookie("token", token, {
-      httpOnly: true,
-    });
+    res.cookie("token", token);
 
     res.status(200).json({
       success: true,
@@ -195,35 +196,4 @@ export const resetPassword = async (req, res) => {
     success: true,
     message: "Password has been reset successfully.",
   });
-};
-
-export const createAdmin = async (req, res) => {
-  try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Access denied." });
-    }
-
-    const { userName, email, password } = req.body;
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "User already exists." });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newAdmin = new User({
-      userName,
-      email,
-      password: hashedPassword,
-      role: "admin",
-    });
-
-    await newAdmin.save();
-
-    res.status(201).json({ message: "Admin created successfully." });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error." });
-  }
 };

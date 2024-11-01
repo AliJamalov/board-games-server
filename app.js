@@ -2,16 +2,18 @@ import express from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 
 // Routes
-import authRouter from "./routes/auth.routes.js";
-import gameRouter from "./routes/game.routes.js";
-import userRouter from "./routes/user.routes.js";
-import categoryRouter from "./routes/category.routes.js";
-import contactRouter from "./routes/contact.routes.js";
-import faqRouter from "./routes/faq.routes.js";
-import informRouter from "./routes/informPage.routes.js";
-import searchRouter from "./routes/search.routes.js";
+import authRouter from "./routes/auth/auth.routes.js";
+import gameRouter from "./routes/shop/game.routes.js";
+import userRouter from "./routes/admin/user.routes.js";
+import categoryRouter from "./routes/admin/category.routes.js";
+import contactRouter from "./routes/admin/contact.routes.js";
+import faqRouter from "./routes/admin/faq.routes.js";
+import informRouter from "./routes/admin/informPage.routes.js";
+import searchRouter from "./routes/shop/search.routes.js";
+import cartRouter from "./routes/shop/cart.routes.js";
 
 const server = express();
 
@@ -20,9 +22,11 @@ server.use(
     origin: ["http://localhost:5173", "http://localhost:5174"],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   })
 );
 
+server.use(cookieParser());
 server.use(express.json());
 
 dotenv.config();
@@ -35,6 +39,7 @@ server.use("/api/contacts", contactRouter);
 server.use("/api/faq", faqRouter);
 server.use("/api/informs", informRouter);
 server.use("/api/search", searchRouter);
+server.use("/api/cart", cartRouter);
 
 const PORT = process.env.PORT;
 const MONGODB_URL = process.env.MONGODB_URL;
