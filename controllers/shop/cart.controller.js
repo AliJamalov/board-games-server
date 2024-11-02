@@ -90,7 +90,7 @@ export const getCartItems = async (req, res) => {
 
     const populateCartItems = validItems.map((item) => ({
       productId: item.productId._id,
-      image: item.productId.image,
+      images: item.productId.images,
       name: item.productId.name,
       price: item.productId.price,
       quantity: item.quantity,
