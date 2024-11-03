@@ -6,12 +6,13 @@ import {
   updateCartItem,
   deleteCartItem,
 } from "../../controllers/shop/cart.controller.js";
+import { authMiddleware } from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
 router.get("/:userId", getCartItems);
 
-router.post("/", addToCart);
+router.post("/", authMiddleware, addToCart);
 
 router.patch("/", updateCartItem);
 

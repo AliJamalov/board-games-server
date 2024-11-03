@@ -14,6 +14,7 @@ import faqRouter from "./routes/admin/faq.routes.js";
 import informRouter from "./routes/admin/informPage.routes.js";
 import searchRouter from "./routes/shop/search.routes.js";
 import cartRouter from "./routes/shop/cart.routes.js";
+import wishListRouter from "./routes/shop/wishList.routes.js";
 
 const server = express();
 
@@ -40,6 +41,7 @@ server.use("/api/faq", faqRouter);
 server.use("/api/informs", informRouter);
 server.use("/api/search", searchRouter);
 server.use("/api/cart", cartRouter);
+server.use("/api/wish-list", wishListRouter);
 
 const PORT = process.env.PORT;
 const MONGODB_URL = process.env.MONGODB_URL;
