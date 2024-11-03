@@ -46,7 +46,7 @@ export const getWishListItems = async (req, res) => {
   }
 };
 
-export const addToWishList = async (req, res) => {
+export const toggleWishList = async (req, res) => {
   try {
     const { userId, productId } = req.body;
 
@@ -66,26 +66,29 @@ export const addToWishList = async (req, res) => {
     }
 
     const existingWish = await WishList.findOne({ userId, productId });
+
     if (existingWish) {
-      return res.status(400).json({
-        success: false,
-        message: "Product is already in the wishlist",
+      // Если продукт уже есть в wishList, удаляем его
+      await WishList.deleteOne({ userId, productId });
+      return res.status(200).json({
+        success: true,
+        message: "Product removed from wishlist successfully",
+      });
+    } else {
+      // Если продукта нет, добавляем его в wishList
+      const newWishItem = new WishList({ userId, productId });
+      await newWishItem.save();
+      return res.status(201).json({
+        success: true,
+        message: "Product added to wishlist successfully",
+        data: newWishItem,
       });
     }
-
-    const newWishItem = new WishList({ userId, productId });
-    await newWishItem.save();
-
-    res.status(201).json({
-      success: true,
-      message: "Product added to wishlist successfully",
-      data: newWishItem,
-    });
   } catch (error) {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: "Error adding product to wishlist",
+      message: "Error toggling product in wishlist",
     });
   }
 };

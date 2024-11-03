@@ -2,7 +2,7 @@ import express from "express";
 
 import {
   getWishListItems,
-  addToWishList,
+  toggleWishList,
   deleteWishItems,
 } from "../../controllers/shop/wishList.controller.js";
 
@@ -10,7 +10,7 @@ const router = express.Router();
 
 router.get("/:userId", getWishListItems);
 
-router.post("/", addToWishList);
+router.post("/", toggleWishList);
 
 router.delete("/:userId/:productId", deleteWishItems);
 
