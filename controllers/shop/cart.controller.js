@@ -29,7 +29,7 @@ export const addToCart = async (req, res) => {
 
     let cart = await Cart.findOne({ userId });
     if (!cart) {
-      cart = new Cart({ userId, items: [] });
+      cart = new Cart({ userId, items: [], totalAmount: 0 });
     }
 
     const findCurrentProductIndex = cart.items.findIndex(
@@ -41,6 +41,17 @@ export const addToCart = async (req, res) => {
     } else {
       cart.items[findCurrentProductIndex].quantity += quantity;
     }
+
+    const productsInCart = await Promise.all(
+      cart.items.map(async (item) => ({
+        ...item.toObject(),
+        product: await Game.findById(item.productId),
+      }))
+    );
+
+    cart.totalAmount = productsInCart.reduce((total, item) => {
+      return total + item.quantity * item.product.price;
+    }, 0);
 
     await cart.save();
     res.status(200).json({
@@ -138,11 +149,24 @@ export const updateCartItem = async (req, res) => {
     if (findCurrentProductIndex === -1) {
       return res.status(404).json({
         success: false,
-        message: "Cart item not present !",
+        message: "Cart item not present!",
       });
     }
 
-    cart.items[findCurrentProductIndex].quantity = quantity;
+    const existingItem = cart.items[findCurrentProductIndex];
+
+    const product = await Game.findById(productId);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found!",
+      });
+    }
+
+    cart.totalAmount -= existingItem.quantity * product.price;
+    existingItem.quantity = quantity;
+    cart.totalAmount += existingItem.quantity * product.price;
+
     await cart.save();
 
     await cart.populate({
@@ -196,16 +220,27 @@ export const deleteCartItem = async (req, res) => {
       });
     }
 
+    const itemToDelete = cart.items.find(
+      (item) => item.productId._id.toString() === productId
+    );
+
+    if (!itemToDelete) {
+      return res.status(404).json({
+        success: false,
+        message: "Item not found in the cart!",
+      });
+    }
+
+    const amountToSubtract =
+      itemToDelete.quantity * itemToDelete.productId.price;
+
     cart.items = cart.items.filter(
       (item) => item.productId._id.toString() !== productId
     );
 
-    await cart.save();
+    cart.totalAmount -= amountToSubtract;
 
-    await cart.populate({
-      path: "items.productId",
-      select: "images name price",
-    });
+    await cart.save();
 
     const populateCartItems = cart.items.map((item) => ({
       productId: item.productId ? item.productId._id : null,

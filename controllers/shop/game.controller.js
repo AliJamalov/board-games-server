@@ -241,18 +241,164 @@ export const deleteGame = async (req, res) => {
 
 export const getNewArrivals = async (req, res) => {
   try {
-    const games = await Game.find({ newArrivals: true });
-    res.json(games);
+    const {
+      age,
+      category,
+      players,
+      duration,
+      page = 1,
+      limit,
+      sortBy = "price-lowtohigh",
+    } = req.query;
+
+    const filter = { newArrivals: true };
+    if (age) filter.age = age;
+    if (players) filter.players = players;
+    if (duration) filter.duration = duration;
+    if (category) filter.category = category;
+
+    let sort = {};
+
+    switch (sortBy) {
+      case "price-lowtohigh":
+        sort.price = 1;
+        break;
+      case "price-hightolow":
+        sort.price = -1;
+        break;
+      case "name-atoz":
+        sort.name = 1;
+        break;
+      case "name-ztoa":
+        sort.name = -1;
+        break;
+      case "date-newest":
+        sort.createdAt = -1;
+        break;
+      case "date-oldest":
+        sort.createdAt = 1;
+        break;
+      default:
+        sort.price = 1;
+        break;
+    }
+
+    const pageNum = Number(page);
+    const limitNum = Number(limit);
+
+    if (isNaN(pageNum) || isNaN(limitNum) || limitNum <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid pagination parameters.",
+      });
+    }
+
+    const skip = (pageNum - 1) * limitNum;
+
+    const [count, games] = await Promise.all([
+      Game.countDocuments(filter),
+      Game.find(filter).limit(limitNum).skip(skip).sort(sort),
+    ]);
+
+    const pageCount = Math.ceil(count / limitNum);
+
+    res.status(200).json({
+      success: true,
+      pagination: {
+        totalItems: count,
+        pageCount,
+        currentPage: pageNum,
+        itemsPerPage: limitNum,
+      },
+      data: games,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error. Unable to retrieve new arrivals.",
+    });
   }
 };
 
 export const getRecomended = async (req, res) => {
   try {
-    const games = await Game.find({ recomended: true });
-    res.json(games);
+    const {
+      age,
+      category,
+      players,
+      duration,
+      page = 1,
+      limit,
+      sortBy = "price-lowtohigh",
+    } = req.query;
+
+    const filter = { recomended: true };
+    if (age) filter.age = age;
+    if (players) filter.players = players;
+    if (duration) filter.duration = duration;
+    if (category) filter.category = category;
+
+    let sort = {};
+
+    switch (sortBy) {
+      case "price-lowtohigh":
+        sort.price = 1;
+        break;
+      case "price-hightolow":
+        sort.price = -1;
+        break;
+      case "name-atoz":
+        sort.name = 1;
+        break;
+      case "name-ztoa":
+        sort.name = -1;
+        break;
+      case "date-newest":
+        sort.createdAt = -1;
+        break;
+      case "date-oldest":
+        sort.createdAt = 1;
+        break;
+      default:
+        sort.price = 1;
+        break;
+    }
+
+    const pageNum = Number(page);
+    const limitNum = Number(limit);
+
+    if (isNaN(pageNum) || isNaN(limitNum) || limitNum <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid pagination parameters.",
+      });
+    }
+
+    const skip = (pageNum - 1) * limitNum;
+
+    const [count, games] = await Promise.all([
+      Game.countDocuments(filter),
+      Game.find(filter).limit(limitNum).skip(skip).sort(sort),
+    ]);
+
+    const pageCount = Math.ceil(count / limitNum);
+
+    res.status(200).json({
+      success: true,
+      pagination: {
+        totalItems: count,
+        pageCount,
+        currentPage: pageNum,
+        itemsPerPage: limitNum,
+      },
+      data: games,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error. Unable to retrieve recomended.",
+    });
   }
 };
