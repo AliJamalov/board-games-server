@@ -16,6 +16,9 @@ import searchRouter from "./routes/shop/search.routes.js";
 import cartRouter from "./routes/shop/cart.routes.js";
 import wishListRouter from "./routes/shop/wishList.routes.js";
 import reviewRouter from "./routes/shop/review.routes.js";
+import filtersRouter from "./routes/shop/uniqueFilters.routes.js";
+import addressRouter from "./routes/shop/address.routes.js";
+import orderRouter from "./routes/shop/order.routes.js";
 
 const server = express();
 
@@ -44,6 +47,9 @@ server.use("/api/search", searchRouter);
 server.use("/api/cart", cartRouter);
 server.use("/api/wish-list", wishListRouter);
 server.use("/api/product-review", reviewRouter);
+server.use("/api/filters", filtersRouter);
+server.use("/api/address", addressRouter);
+server.use("/api/orders", orderRouter);
 
 const PORT = process.env.PORT;
 const MONGODB_URL = process.env.MONGODB_URL;
