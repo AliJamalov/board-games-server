@@ -21,9 +21,7 @@ export const createOrder = async (req, res) => {
       cartId,
     } = req.body;
 
-    console.log("Received order data:", req.body);
-
-    // Создаем запрос для создания заказа на PayPal
+    // Создаем запрос для создания нового заказа на PayPal
     const request = new paypal.orders.OrdersCreateRequest();
     request.prefer("return=representation");
     request.requestBody({
@@ -45,7 +43,9 @@ export const createOrder = async (req, res) => {
             sku: item.productId,
             unit_amount: {
               currency_code: "USD",
-              value: item.price.toFixed(2),
+              value: (item.salePrice > 0 ? item.salePrice : item.price).toFixed(
+                2
+              ),
             },
             quantity: item.quantity,
           })),
@@ -57,17 +57,10 @@ export const createOrder = async (req, res) => {
       },
     });
 
-    console.log(
-      "PayPal order request body:",
-      JSON.stringify(request.requestBody, null, 2)
-    );
-
     // Создаем заказ через PayPal API
     const order = await client().execute(request);
-    console.log("Full PayPal order response:", order); // Логируем весь ответ
 
     if (!order || !order.result) {
-      console.error("PayPal response is undefined or missing result:", order);
       return res.status(500).json({
         success: false,
         message: "PayPal response is undefined or missing result",
@@ -75,34 +68,7 @@ export const createOrder = async (req, res) => {
       });
     }
 
-    if (!order.result.links) {
-      console.error(
-        "PayPal response does not contain expected links:",
-        order.result
-      );
-      return res.status(500).json({
-        success: false,
-        message: "PayPal response does not contain expected links",
-        error: order.result,
-      });
-    }
-
-    const approvalURL = order.result.links.find(
-      (link) => link.rel === "approve"
-    )?.href;
-
-    if (!approvalURL) {
-      console.error("Approval URL not found in PayPal response:", order.result);
-      return res.status(500).json({
-        success: false,
-        message: "Approval URL not found in PayPal response",
-        error: order.result,
-      });
-    }
-
-    console.log("Approval URL:", approvalURL);
-
-    // Логируем сохранение заказа в базу данных
+    // Сохраняем заказ в базе данных как новый
     const newlyCreatedOrder = new Order({
       userId,
       cartId,
@@ -110,7 +76,7 @@ export const createOrder = async (req, res) => {
       addressInfo,
       orderStatus,
       paymentMethod,
-      paymentStatus,
+      paymentStatus: "pending", // Начальный статус, можно обновить после захвата
       totalAmount,
       orderDate,
       orderUpdateDate,
@@ -118,24 +84,14 @@ export const createOrder = async (req, res) => {
       payerId,
     });
 
-    console.log("New order object to be saved:", newlyCreatedOrder);
+    await newlyCreatedOrder.save();
 
-    try {
-      await newlyCreatedOrder.save();
-      console.log("Order saved successfully:", newlyCreatedOrder);
-      return res.status(201).json({
-        success: true,
-        approvalURL,
-        orderId: newlyCreatedOrder._id,
-      });
-    } catch (saveError) {
-      console.error("Error saving order:", saveError);
-      return res.status(500).json({
-        success: false,
-        message: "Error saving order to the database",
-        error: saveError.message,
-      });
-    }
+    return res.status(201).json({
+      success: true,
+      approvalURL: order.result.links.find((link) => link.rel === "approve")
+        ?.href,
+      orderId: newlyCreatedOrder._id,
+    });
   } catch (e) {
     console.error("Error in createOrder function:", e);
     return res.status(500).json({
@@ -148,13 +104,8 @@ export const createOrder = async (req, res) => {
 
 export const capturePayment = async (req, res) => {
   try {
-    // Извлекаем параметры из query
     const { paymentId, payerId, orderId } = req.query;
 
-    // Логируем полученные параметры
-    console.log("Received parameters:", { paymentId, payerId, orderId });
-
-    // Проверка на наличие всех необходимых данных
     if (!paymentId || !payerId || !orderId) {
       console.log("Missing paymentId, payerId, or orderId");
       return res.status(400).json({
@@ -163,97 +114,65 @@ export const capturePayment = async (req, res) => {
       });
     }
 
-    // Находим заказ по orderId
     let order = await Order.findById(orderId);
-    console.log("Found order:", order);
 
     if (!order) {
-      console.log("Order not found with ID:", orderId);
       return res.status(404).json({
         success: false,
         message: "Order cannot be found",
       });
     }
 
-    // Проверка, был ли уже захвачен платеж
     if (order.paymentStatus === "paid") {
-      console.log("Order already captured and paid");
       return res.status(400).json({
         success: false,
         message: "Payment already captured for this order",
       });
     }
 
-    // Выполняем запрос на PayPal для захвата платежа
     const request = new paypal.orders.OrdersCaptureRequest(paymentId);
-    // Здесь можно передать параметры, если это необходимо для запроса
-    // request.requestBody({});
 
-    console.log("Executing PayPal capture request with paymentId:", paymentId);
     const captureResponse = await client().execute(request);
 
-    console.log("PayPal capture response:", captureResponse);
-
-    // Проверяем статус захвата
     if (captureResponse.result.status !== "COMPLETED") {
-      console.log(
-        "Payment capture failed with status:",
-        captureResponse.result.status
-      );
       return res.status(400).json({
         success: false,
         message: "Payment capture failed",
       });
     }
 
-    // Обновляем статус заказа после успешного платежа
     order.paymentStatus = "paid";
     order.orderStatus = "confirmed";
     order.paymentId = paymentId;
     order.payerId = payerId;
 
-    // Логируем изменения в статусе заказа
-    console.log("Updated order status:", order);
-
-    // Обновляем количество на складе
     for (let item of order.cartItems) {
       let product = await Game.findById(item.productId);
 
-      console.log("Checking product stock for productId:", item.productId);
-
       if (!product) {
-        console.log("Product not found:", item.productId);
         return res.status(404).json({
           success: false,
           message: `Product not found: ${item.productId}`,
         });
       }
 
-      product.totalStock -= item.quantity; // Уменьшаем количество на складе
+      product.totalStock -= item.quantity;
 
-      console.log("Updated product stock for product:", product.name);
       await product.save();
     }
 
-    // Удаляем корзину после подтверждения заказа
     const getCartId = order.cartId;
-    console.log("Deleting cart with cartId:", getCartId);
+
     await Cart.findByIdAndDelete(getCartId);
 
-    // Сохраняем изменения в заказе
     await order.save();
-    console.log("Order saved:", order);
 
-    // Отправляем ответ клиенту
     res.status(200).json({
       success: true,
       message: "Order confirmed and payment captured",
       data: order,
     });
   } catch (e) {
-    console.error("Error occurred during payment capture:", e);
-
-    // Уточняем, если ошибка приходит от PayPal
     if (e.response && e.response.data) {
       console.error("PayPal error details:", e.response.data);
     }

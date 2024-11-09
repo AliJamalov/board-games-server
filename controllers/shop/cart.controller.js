@@ -43,14 +43,21 @@ export const addToCart = async (req, res) => {
     }
 
     const productsInCart = await Promise.all(
-      cart.items.map(async (item) => ({
-        ...item.toObject(),
-        product: await Game.findById(item.productId),
-      }))
+      cart.items.map(async (item) => {
+        const productInCart = await Game.findById(item.productId);
+        return {
+          ...item.toObject(),
+          product: productInCart,
+        };
+      })
     );
 
     cart.totalAmount = productsInCart.reduce((total, item) => {
-      return total + item.quantity * item.product.price;
+      const productPrice =
+        item.product.salePrice > 0
+          ? item.product.salePrice
+          : item.product.price;
+      return total + item.quantity * productPrice;
     }, 0);
 
     await cart.save();
@@ -80,7 +87,7 @@ export const getCartItems = async (req, res) => {
 
     const cart = await Cart.findOne({ userId }).populate({
       path: "items.productId",
-      select: "images name price",
+      select: "images name price salePrice",
     });
 
     if (!cart) {
@@ -104,6 +111,7 @@ export const getCartItems = async (req, res) => {
       images: item.productId.images,
       name: item.productId.name,
       price: item.productId.price,
+      salePrice: item.productId.salePrice,
       quantity: item.quantity,
     }));
 
@@ -154,8 +162,8 @@ export const updateCartItem = async (req, res) => {
     }
 
     const existingItem = cart.items[findCurrentProductIndex];
-
     const product = await Game.findById(productId);
+
     if (!product) {
       return res.status(404).json({
         success: false,
@@ -163,22 +171,34 @@ export const updateCartItem = async (req, res) => {
       });
     }
 
-    cart.totalAmount -= existingItem.quantity * product.price;
+    const productPrice =
+      product.salePrice > 0 ? product.salePrice : product.price;
+
+    // Уменьшить общую сумму на стоимость старого количества
+    cart.totalAmount -= existingItem.quantity * productPrice;
+
+    // Обновить количество
     existingItem.quantity = quantity;
-    cart.totalAmount += existingItem.quantity * product.price;
+
+    // Добавить новую стоимость с обновленным количеством
+    cart.totalAmount += existingItem.quantity * productPrice;
 
     await cart.save();
 
     await cart.populate({
       path: "items.productId",
-      select: "images name price",
+      select: "images name price salePrice",
     });
 
     const populateCartItems = cart.items.map((item) => ({
       productId: item.productId ? item.productId._id : null,
       images: item.productId ? item.productId.images : null,
       name: item.productId ? item.productId.name : "Product not found",
-      price: item.productId ? item.productId.price : null,
+      price: item.productId
+        ? item.productId.salePrice > 0
+          ? item.productId.salePrice
+          : item.productId.price
+        : null,
       quantity: item.quantity,
     }));
 
@@ -210,7 +230,7 @@ export const deleteCartItem = async (req, res) => {
 
     const cart = await Cart.findOne({ userId }).populate({
       path: "items.productId",
-      select: "images name price",
+      select: "images name price salePrice",
     });
 
     if (!cart) {
@@ -231,8 +251,12 @@ export const deleteCartItem = async (req, res) => {
       });
     }
 
-    const amountToSubtract =
-      itemToDelete.quantity * itemToDelete.productId.price;
+    const productPrice =
+      itemToDelete.productId.salePrice > 0
+        ? itemToDelete.productId.salePrice
+        : itemToDelete.productId.price;
+
+    const amountToSubtract = itemToDelete.quantity * productPrice;
 
     cart.items = cart.items.filter(
       (item) => item.productId._id.toString() !== productId
@@ -246,7 +270,11 @@ export const deleteCartItem = async (req, res) => {
       productId: item.productId ? item.productId._id : null,
       images: item.productId ? item.productId.images : null,
       name: item.productId ? item.productId.name : "Product not found",
-      price: item.productId ? item.productId.price : null,
+      price: item.productId
+        ? item.productId.salePrice > 0
+          ? item.productId.salePrice
+          : item.productId.price
+        : null,
       quantity: item.quantity,
     }));
 
