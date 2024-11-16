@@ -139,7 +139,7 @@ export const forgotPassword = async (req, res) => {
 
   const resetToken = crypto.randomBytes(20).toString("hex");
 
-  const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+  const resetUrl = `${"http://localhost:5173"}/reset-password/${resetToken}`;
 
   const transporter = nodemailer.createTransport({
     service: "Gmail",
