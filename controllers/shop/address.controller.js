@@ -68,7 +68,14 @@ export const editAddress = async (req, res) => {
     if (!userId || !addressId) {
       return res.status(400).json({
         success: false,
-        message: "User and address id is required!",
+        message: "User and address id are required!",
+      });
+    }
+
+    if (!formData.address || !formData.city || !formData.pincode) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields in the form data!",
       });
     }
 
@@ -93,10 +100,9 @@ export const editAddress = async (req, res) => {
       data: address,
     });
   } catch (e) {
-    console.log(e);
     res.status(500).json({
       success: false,
-      message: "Error",
+      message: "Error while updating address",
     });
   }
 };

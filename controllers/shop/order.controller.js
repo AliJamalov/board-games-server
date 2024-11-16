@@ -21,7 +21,6 @@ export const createOrder = async (req, res) => {
       cartId,
     } = req.body;
 
-    // Создаем запрос для создания нового заказа на PayPal
     const request = new paypal.orders.OrdersCreateRequest();
     request.prefer("return=representation");
     request.requestBody({
@@ -57,7 +56,6 @@ export const createOrder = async (req, res) => {
       },
     });
 
-    // Создаем заказ через PayPal API
     const order = await client().execute(request);
 
     if (!order || !order.result) {
@@ -68,7 +66,6 @@ export const createOrder = async (req, res) => {
       });
     }
 
-    // Сохраняем заказ в базе данных как новый
     const newlyCreatedOrder = new Order({
       userId,
       cartId,
@@ -76,7 +73,7 @@ export const createOrder = async (req, res) => {
       addressInfo,
       orderStatus,
       paymentMethod,
-      paymentStatus: "pending", // Начальный статус, можно обновить после захвата
+      paymentStatus: "pending",
       totalAmount,
       orderDate,
       orderUpdateDate,
@@ -107,7 +104,6 @@ export const capturePayment = async (req, res) => {
     const { paymentId, payerId, orderId } = req.query;
 
     if (!paymentId || !payerId || !orderId) {
-      console.log("Missing paymentId, payerId, or orderId");
       return res.status(400).json({
         success: false,
         message: "Missing paymentId, payerId, or orderId",
@@ -117,6 +113,7 @@ export const capturePayment = async (req, res) => {
     let order = await Order.findById(orderId);
 
     if (!order) {
+      console.log("Order not found:", orderId);
       return res.status(404).json({
         success: false,
         message: "Order cannot be found",
@@ -173,6 +170,8 @@ export const capturePayment = async (req, res) => {
       data: order,
     });
   } catch (e) {
+    console.error("Error in capturing payment:", e);
+
     if (e.response && e.response.data) {
       console.error("PayPal error details:", e.response.data);
     }
@@ -212,9 +211,9 @@ export const getAllOrdersByUser = async (req, res) => {
 
 export const getOrderDetails = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { orderId } = req.params;
 
-    const order = await Order.findById(id);
+    const order = await Order.findById(orderId);
 
     if (!order) {
       return res.status(404).json({

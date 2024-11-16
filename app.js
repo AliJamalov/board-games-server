@@ -12,6 +12,7 @@ import categoryRouter from "./routes/admin/category.routes.js";
 import contactRouter from "./routes/admin/contact.routes.js";
 import faqRouter from "./routes/admin/faq.routes.js";
 import informRouter from "./routes/admin/informPage.routes.js";
+import orderAdminRouter from "./routes/admin/order.routes.js";
 import searchRouter from "./routes/shop/search.routes.js";
 import cartRouter from "./routes/shop/cart.routes.js";
 import wishListRouter from "./routes/shop/wishList.routes.js";
@@ -36,13 +37,17 @@ server.use(express.json());
 
 dotenv.config();
 
-server.use("/api/auth", authRouter);
-server.use("/api/games", gameRouter);
+// admin routes
 server.use("/api/users", userRouter);
-server.use("/api/categories", categoryRouter);
 server.use("/api/contacts", contactRouter);
 server.use("/api/faq", faqRouter);
 server.use("/api/informs", informRouter);
+server.use("/api/admin/orders", orderAdminRouter);
+
+// client routes
+server.use("/api/auth", authRouter);
+server.use("/api/games", gameRouter);
+server.use("/api/categories", categoryRouter);
 server.use("/api/search", searchRouter);
 server.use("/api/cart", cartRouter);
 server.use("/api/wish-list", wishListRouter);

@@ -23,7 +23,7 @@ const ProductReviewSchema = new mongoose.Schema(
     },
 
     reviewValue: {
-      type: String,
+      type: Number,
       required: true,
     },
   },

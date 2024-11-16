@@ -15,6 +15,6 @@ router.get("/capture", capturePayment);
 
 router.get("/list/:userId", getAllOrdersByUser);
 
-router.get("/details/:id", getOrderDetails);
+router.get("/details/:orderId", getOrderDetails);
 
 export default router;

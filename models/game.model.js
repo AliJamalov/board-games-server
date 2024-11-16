@@ -16,14 +16,12 @@ const GameSchema = mongoose.Schema(
     },
     age: {
       type: String,
-      required: true,
     },
     duration: {
       type: String,
     },
     players: {
       type: String,
-      required: true,
     },
     images: {
       type: [String],
@@ -44,7 +42,7 @@ const GameSchema = mongoose.Schema(
     raiting: {
       type: Number,
       required: true,
-      default: 0.0,
+      default: 0,
     },
     newArrivals: {
       type: Boolean,

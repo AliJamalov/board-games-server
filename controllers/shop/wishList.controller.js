@@ -68,14 +68,12 @@ export const toggleWishList = async (req, res) => {
     const existingWish = await WishList.findOne({ userId, productId });
 
     if (existingWish) {
-      // Если продукт уже есть в wishList, удаляем его
       await WishList.deleteOne({ userId, productId });
       return res.status(200).json({
         success: true,
         message: "Product removed from wishlist successfully",
       });
     } else {
-      // Если продукта нет, добавляем его в wishList
       const newWishItem = new WishList({ userId, productId });
       await newWishItem.save();
       return res.status(201).json({

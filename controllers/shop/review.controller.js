@@ -24,18 +24,28 @@ export const addProductReview = async (req, res) => {
     const { productId, userId, username, reviewMessage, reviewValue } =
       req.body;
 
-    const checkExistinfReview = await ProductReview.findOne({
+    console.log("Received review data:", {
+      productId,
+      userId,
+      reviewMessage,
+      reviewValue,
+    });
+
+    // Проверка на существующий отзыв
+    const checkExistingReview = await ProductReview.findOne({
       productId,
       userId,
     });
 
-    if (checkExistinfReview) {
+    if (checkExistingReview) {
+      console.log("User has already reviewed this product.");
       return res.status(400).json({
         success: false,
         message: "You already reviewed this product!",
       });
     }
 
+    // Создание нового отзыва
     const newReview = new ProductReview({
       productId,
       userId,
@@ -45,21 +55,34 @@ export const addProductReview = async (req, res) => {
     });
 
     await newReview.save();
+    console.log("New review saved:", newReview);
 
+    // Получение всех отзывов для расчета среднего рейтинга
     const reviews = await ProductReview.find({ productId });
-    const totalReviewsLength = reviews.length;
-    const raiting =
-      reviews.reduce((sum, reviewItem) => sum + reviewItem.reviewValue, 0) /
-      totalReviewsLength;
+    console.log("All reviews for product:", reviews);
 
+    const totalReviewsLength = reviews.length;
+    console.log("Total number of reviews:", totalReviewsLength);
+
+    const totalRating = reviews.reduce(
+      (sum, reviewItem) => sum + reviewItem.reviewValue,
+      0
+    );
+    console.log("Sum of all review ratings:", totalRating);
+
+    const raiting = Math.round(totalRating / totalReviewsLength);
+    console.log("Calculated rating:", raiting);
+
+    // Обновление рейтинга продукта
     await Game.findByIdAndUpdate(productId, { raiting });
+    console.log("Updated product rating in database:", { productId, raiting });
 
     res.status(201).json({
       success: true,
       data: newReview,
     });
   } catch (e) {
-    console.log(e);
+    console.error("Error adding product review:", e);
     res.status(500).json({
       success: false,
       message: "Error",
