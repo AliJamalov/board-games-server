@@ -98,7 +98,10 @@ export const login = async (req, res) => {
       expiresIn: "30d",
     });
 
-    res.cookie("token", token);
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+    });
 
     res.status(200).json({
       success: true,
