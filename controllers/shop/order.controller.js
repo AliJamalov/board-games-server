@@ -51,8 +51,8 @@ export const createOrder = async (req, res) => {
         },
       ],
       application_context: {
-        return_url: "http://localhost:5173/paypal-return",
-        cancel_url: "http://localhost:5173/paypal-cancel",
+        return_url: "https://board-games-kappa.vercel.app/paypal-return",
+        cancel_url: "https://board-games-kappa.vercel.app/paypal-cancel",
       },
     });
 
