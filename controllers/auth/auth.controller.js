@@ -134,7 +134,6 @@ export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
-    // Поиск пользователя в базе данных
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({
@@ -143,24 +142,20 @@ export const forgotPassword = async (req, res) => {
       });
     }
 
-    // Генерация токена для сброса пароля
     const resetToken = crypto.randomBytes(20).toString("hex");
 
-    // Создание URL для сброса пароля
-    const resetUrl = `https://board-games-server-sz9k.onrender.com/api/reset-password/${resetToken}`;
+    const resetUrl = `https://board-games-kappa.vercel.app/reset-password/${resetToken}`;
 
-    // Настройка транспондера для отправки почты через Gmail
     const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com", // SMTP-сервер Gmail
-      port: 587, // Порт для STARTTLS
-      secure: false, // Используем STARTTLS (false для 587 порта)
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
       auth: {
-        user: process.env.EMAIL_USER, // Ваша почта Gmail
-        pass: process.env.EMAIL_PASS, // Пароль приложения Gmail
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
     });
 
-    // Опции письма
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
@@ -168,24 +163,21 @@ export const forgotPassword = async (req, res) => {
       text: `You requested a password reset. Click the link to reset your password: ${resetUrl}`,
     };
 
-    // Отправка письма
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
-        console.error("Error sending email:", error); // Логирование ошибок для отладки
+        console.error("Error sending email:", error);
         return res.status(500).json({
           success: false,
           message: "Error sending email.",
         });
       }
 
-      // Успешная отправка письма
       res.status(200).json({
         success: true,
         message: "Email sent successfully.",
       });
     });
   } catch (error) {
-    // Обработка неожиданных ошибок
     console.error("Forgot Password Error:", error);
     res.status(500).json({
       success: false,
