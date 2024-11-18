@@ -33,18 +33,6 @@ export const register = async (req, res) => {
 
     await newUser.save();
 
-    const token = jwt.sign(
-      {
-        id: newUser._id,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "30d" }
-    );
-
-    res.cookie("token", token, {
-      expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-    });
-
     res.status(201).json({
       success: true,
       user: {
@@ -134,7 +122,6 @@ export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
-    // Поиск пользователя по email
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({
@@ -143,19 +130,15 @@ export const forgotPassword = async (req, res) => {
       });
     }
 
-    // Генерация токена для сброса
     const resetToken = crypto.randomBytes(20).toString("hex");
     console.log("Generated reset token:", resetToken);
 
-    // Установка токена и срока действия в базе данных
     user.resetPasswordToken = resetToken;
-    user.resetPasswordExpiry = Date.now() + 3600000; // Токен действует 1 час
+    user.resetPasswordExpiry = Date.now() + 3600000;
     await user.save();
 
-    // Создание URL для сброса пароля
     const resetUrl = `https://board-games-kappa.vercel.app/reset-password/${resetToken}`;
 
-    // Настройка почтового транспорта
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 587,
@@ -166,7 +149,6 @@ export const forgotPassword = async (req, res) => {
       },
     });
 
-    // Настройка email
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
@@ -174,7 +156,6 @@ export const forgotPassword = async (req, res) => {
       text: `You requested a password reset. Click the link to reset your password: ${resetUrl}`,
     };
 
-    // Отправка email
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
         console.error("Error sending email:", error);
@@ -215,7 +196,7 @@ export const resetPassword = async (req, res) => {
     console.log("Finding user by token...");
     const user = await User.findOne({
       resetPasswordToken: token,
-      resetPasswordExpiry: { $gt: Date.now() }, // Проверяем срок действия токена
+      resetPasswordExpiry: { $gt: Date.now() },
     });
 
     if (!user) {
