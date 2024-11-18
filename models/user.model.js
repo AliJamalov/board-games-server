@@ -20,6 +20,14 @@ const UserSchema = mongoose.Schema({
     type: String,
     default: "user",
   },
+  resetPasswordToken: {
+    type: String,
+    default: null, // Начальное значение
+  },
+  resetPasswordExpiry: {
+    type: Date,
+    default: null, // Начальное значение
+  },
 });
 
 export const User = mongoose.model("User", UserSchema);
