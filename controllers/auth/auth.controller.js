@@ -190,31 +190,38 @@ export const resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
 
+    console.log("Request body:", req.body);
+
     if (!token || !newPassword) {
+      console.log("Missing token or newPassword.");
       return res.status(400).json({
         success: false,
         message: "Please provide a token and new password.",
       });
     }
 
-    const user = await User.findOne({
-      resetPasswordToken: token,
-      resetPasswordExpiry: { $gt: Date.now() },
-    });
+    console.log("Skipping token validation for debugging.");
 
+    const user = await User.findOne({ email: req.body.email });
     if (!user) {
+      console.log("User not found.");
       return res.status(404).json({
         success: false,
-        message: "Invalid or expired token.",
+        message: "User not found.",
       });
     }
 
+    console.log("User found:", user);
+
     const hashPassword = await bcrypt.hash(newPassword, 10);
+    console.log("Hashed password:", hashPassword);
 
     user.password = hashPassword;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpiry = undefined;
+
     await user.save();
+    console.log("Password updated and token cleared for user:", user);
 
     res.status(200).json({
       success: true,
