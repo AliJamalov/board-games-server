@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import axios from "axios"; // Для отправки запросов
 
 // Routes
 import authRouter from "./routes/auth/auth.routes.js";
@@ -58,6 +59,22 @@ server.use("/api/orders", orderRouter);
 
 const PORT = process.env.PORT;
 const MONGODB_URL = process.env.MONGODB_URL;
+
+// Периодический пинг для поддержания активности
+const SERVER_URL = "https://board-games-server-sz9k.onrender.com/api";
+const PING_INTERVAL = 5 * 60 * 1000; // Интервал в миллисекундах (5 минут)
+
+const pingServer = async () => {
+  try {
+    const response = await axios.get(SERVER_URL);
+    console.log(`Ping successful: ${response.status} - ${response.statusText}`);
+  } catch (error) {
+    console.error(`Ping failed: ${error.message}`);
+  }
+};
+
+// Запускаем периодические пинги
+setInterval(pingServer, PING_INTERVAL);
 
 server.listen(PORT, () => {
   console.log(`Server listeinig on ${PORT}`);

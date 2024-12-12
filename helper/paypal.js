@@ -1,6 +1,5 @@
-import * as paypal from "@paypal/checkout-server-sdk"; // Используй именно * as для импорта
+import * as paypal from "@paypal/checkout-server-sdk";
 
-// Конфигурация PayPal SDK
 function environment() {
   return new paypal.core.SandboxEnvironment(
     process.env.PAYPAL_CLIENT_ID,
@@ -8,7 +7,6 @@ function environment() {
   );
 }
 
-// Создание клиента для работы с PayPal API
 function client() {
   return new paypal.core.PayPalHttpClient(environment());
 }

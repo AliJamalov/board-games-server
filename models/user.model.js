@@ -22,11 +22,11 @@ const UserSchema = mongoose.Schema({
   },
   resetPasswordToken: {
     type: String,
-    default: null, // Начальное значение
+    default: null,
   },
   resetPasswordExpiry: {
     type: Date,
-    default: null, // Начальное значение
+    default: null,
   },
 });
 

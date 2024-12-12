@@ -131,7 +131,6 @@ export const forgotPassword = async (req, res) => {
     }
 
     const resetToken = crypto.randomBytes(20).toString("hex");
-    console.log("Generated reset token:", resetToken);
 
     user.resetPasswordToken = resetToken;
     user.resetPasswordExpiry = Date.now() + 3600000;
@@ -183,48 +182,38 @@ export const resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
 
-    console.log("Request body:", req.body);
-
     if (!token || !newPassword) {
-      console.log("Missing token or newPassword.");
       return res.status(400).json({
         success: false,
         message: "Please provide a token and new password.",
       });
     }
 
-    console.log("Finding user by token...");
     const user = await User.findOne({
       resetPasswordToken: token,
       resetPasswordExpiry: { $gt: Date.now() },
     });
 
     if (!user) {
-      console.log("User not found or token expired.");
       return res.status(404).json({
         success: false,
         message: "Invalid or expired token.",
       });
     }
 
-    console.log("User found:", user);
-
     const hashPassword = await bcrypt.hash(newPassword, 10);
-    console.log("Hashed password:", hashPassword);
 
     user.password = hashPassword;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpiry = undefined;
 
     await user.save();
-    console.log("Password updated and token cleared for user:", user);
 
     res.status(200).json({
       success: true,
       message: "Password has been reset successfully.",
     });
   } catch (error) {
-    console.error("Reset Password Error:", error);
     res.status(500).json({
       success: false,
       message: "An error occurred. Please try again later.",

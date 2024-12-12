@@ -174,13 +174,10 @@ export const updateCartItem = async (req, res) => {
     const productPrice =
       product.salePrice > 0 ? product.salePrice : product.price;
 
-    // Уменьшить общую сумму на стоимость старого количества
     cart.totalAmount -= existingItem.quantity * productPrice;
 
-    // Обновить количество
     existingItem.quantity = quantity;
 
-    // Добавить новую стоимость с обновленным количеством
     cart.totalAmount += existingItem.quantity * productPrice;
 
     await cart.save();
